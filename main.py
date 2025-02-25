@@ -19,21 +19,12 @@ load_dotenv()
 #                 print(row)
 
 
-# cleaning data
-# check column names match
-# check column datatypes
-# fix date formats
-# fill in missing values
-# remove duplicate rows
-# check for trailing whitespaces
-# 
-# 
-
 expected_cols = ['order_line_id', 'order_id', 'user_id', 'item_sku', 'qty', 'item_price', 'date_created']
 
-df = pd.read_csv('Order_report_2025-02-19-1.csv')
+df = pd.read_csv('Order_report_2025-02-19-2.csv')
 
-prices = {'SUMO004': 21, 'GAS006': 20}
+prices = {'SUMO005': 21, 'GAS006': 20}
+
 
 def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
 
@@ -48,23 +39,50 @@ def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
         raise ValueError(f'Missing column(s) in data source: \n{missing_cols}')
     return df
 
-def clean_date_formats(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
 
-    df[date_column] = pd.to_datetime(df[date_column], errors='coerce', format='mixed', dayfirst=True,)
-    incorrect_dates_df = df[df[date_column].isna()]
-    if not incorrect_dates_df.empty:
-        print(f'Unable to parse dates from {len(incorrect_dates_df)} row(s). \n {incorrect_dates_df}\n')
-    df[date_column] = df[date_column].ffill().bfill()
+def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+
+    df = df.drop_duplicates(keep='first')
     return df
+
+
+def clean_string_columns(df: pd.DataFrame) -> pd.DataFrame: 
+
+    for col in df.select_dtypes(include=['object']).columns:
+            df[col] = df[col].str.strip()
+    return df
+
+
+def clean_date_formats(df: pd.DataFrame, date_column: str | list[str]) -> pd.DataFrame:
+
+    date_column = [date_column] if isinstance(date_column, str) else date_column
+    for col in date_column:
+        df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True,)
+    return df
+
+
+def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
+
+    for col in df.select_dtypes(include=['datetime64', 'datetime64[ns]']).columns:
+        df[col] = df[col].ffill().bfill()
+    return df
+
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
-    # print(df[df.isna().any(axis=1)])
+
     df['item_price'] = df.groupby('item_sku')['item_price'].transform(lambda x: x.ffill().bfill()) # fill price from other rows
     df['item_price'] = df['item_price'].fillna(df['item_sku'].map(prices)) # fill price from database as dict
-    # print(df[df.isna().any(axis=1)])
     return df
 
+
 df = check_columns(df, expected_cols)
+df = remove_duplicates(df)
+df = clean_string_columns(df)
 df = clean_date_formats(df, 'date_created')
+df = clean_missing_dates(df)
 df = clean_missing_prices(df)
-print(df)
+# df.to_csv('export.csv',index=False)
+# print(df.isna().sum())
+# print(df.tail(50))
+
+        
