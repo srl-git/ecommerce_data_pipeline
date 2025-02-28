@@ -1,7 +1,7 @@
 import os
 from google.cloud import storage
 
-def check_file_exists(blob_name, bucket_name) -> bool:
+def blob_exists(blob_name, bucket_name) -> bool:
     storage_client =storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(blob_name)

@@ -1,11 +1,19 @@
+import os
+from dotenv import load_dotenv
 import pandas as pd
-
-# df = pd.read_csv('gcs://srl_ecommerce/order_reports/Order_report_2025-02-19.csv')
-# df = pd.read_csv('Order_report_2025-02-19.csv')
+import google_cloud_storage_utils as gcs
 
 prices = {'SUMO005': 21, 'GAS006': 20}
 
 expected_cols = ['order_line_id', 'order_id', 'user_id', 'item_sku', 'qty', 'item_price', 'date_created']
+
+def load_report(report_date: str) -> pd.DataFrame:
+
+    bucket_name = os.getenv('bucket_name')
+    report_name = f'order_reports/Order_report_{report_date}.csv'
+    df = pd.read_csv(f'gcs://{bucket_name}/{report_name}')
+    return df
+
 
 def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
 
@@ -55,14 +63,18 @@ def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
     df['item_price'] = df['item_price'].fillna(df['item_sku'].map(prices)) # fill price from database as dict
     return df
 
-def validate_and_clean(df):
-    
+def validate_and_clean(report_date: str):
+
+    df = load_report(report_date)
     df = check_columns(df, expected_cols)
     df = remove_duplicates(df)
     df = clean_string_columns(df)
     df = clean_date_formats(df, 'date_created')
     df = clean_missing_dates(df)
     df = clean_missing_prices(df)
+
+    return df
+
 
 # df.to_csv('export.csv',index=False)
 # print(df.isna().sum())
