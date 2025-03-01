@@ -3,11 +3,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import data_utils as du
 
-def load_report(report_date: str) -> pd.DataFrame:
-
-    bucket_name = os.getenv('bucket_name')
-    report_name = f'order_reports/Order_report_{report_date}.csv'
-    return pd.read_csv(f'gcs://{bucket_name}/{report_name}')
+load_dotenv()
 
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
@@ -32,30 +28,27 @@ def load_to_bq(df: pd.DataFrame) -> None:
         if_exists='append'
     )
     
-def validate_and_transform_report(report_date: str, id_cols: list[str], date_cols: list[str]):
+def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
     
-    # df = load_report(report_date)
-    df = pd.read_csv(
-        'Order_report_2025-02-19.csv'
-    )
+    if df is None:
+        return
+    
     df = du.check_columns(
-        df,
-        expected_cols=
-                ['order_line_id', 'order_id', 
-                'user_id', 'item_sku', 'qty', 
-                'item_price', 'date_created']
+        df, 
+        ['order_line_id', 'order_id', 
+        'user_id', 'item_sku', 'qty', 
+        'item_price', 'date_created']
     )
     df = du.remove_duplicates(df)
-    df = du.check_unique(df, id_cols)
+    df = du.check_unique(df, ['order_line_id'])
     df = du.clean_strings(df)
-    df = du.clean_date_formats(df, date_cols)
+    df = du.clean_date_formats(df, ['date_created'])
     df = du.clean_missing_dates(df)
     df = clean_missing_prices(df)
-    df = du.check_positive(df,ignore_cols=['order_line_id', 'order_id', 'user_id',])
-    df = du.check_outliers(df)
+    df = du.check_positive(df, ['order_line_id'])
+    # df = du.check_outliers(df)
     df = add_line_total_col(df)
-    # load_to_bq(df)
-
-def transform_report(df):
-
+    #load_to_bq(df)
+    
     return df
+ 

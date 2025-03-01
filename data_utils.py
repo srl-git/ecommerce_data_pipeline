@@ -2,6 +2,7 @@ import pandas as pd
 
 
 def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
+
     cols = df.columns.to_list()
     if cols == expected_cols:
         return df
@@ -15,18 +16,20 @@ def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
 
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+
     return df.drop_duplicates(keep='first')
 
 
 def check_unique(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    cols = [cols] if isinstance(cols, str) else cols
-    for col in cols:
-        if not df[col].is_unique:
-            raise ValueError('Report contains duplicate primary keys')
+
+    is_unique = df[cols].nunique() == len(df)
+    if not is_unique.all():
+        raise ValueError('Report contains duplicate primary keys')
     return df
 
 
-def clean_strings(df: pd.DataFrame) -> pd.DataFrame: 
+def clean_strings(df: pd.DataFrame) -> pd.DataFrame:
+
     for col in df.select_dtypes(include=['object']).columns:
             df[col] = df[col].str.strip()
     return df
@@ -40,12 +43,14 @@ def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
 
 
 def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
+
     for col in df.select_dtypes(include=['datetime64', 'datetime64[ns]']).columns:
         df[col] = df[col].ffill().bfill()
     return df
 
 
 def check_positive(df: pd.DataFrame, ignore_cols: list[str]=[]) -> pd.DataFrame:
+
     numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.difference(ignore_cols)
     negative_cols = numeric_cols[(df[numeric_cols] <= 0).any(axis=0)]
     
@@ -55,6 +60,7 @@ def check_positive(df: pd.DataFrame, ignore_cols: list[str]=[]) -> pd.DataFrame:
 
 
 def check_outliers(df: pd.DataFrame) -> pd.DataFrame:
+
     id_cols = [col for col in df.columns if '_id' in col]
     numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.difference(id_cols)
 
