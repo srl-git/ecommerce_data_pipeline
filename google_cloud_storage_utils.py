@@ -1,4 +1,3 @@
-import os
 from google.cloud import storage
 
 def blob_exists(blob_name, bucket_name) -> bool:

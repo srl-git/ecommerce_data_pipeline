@@ -22,7 +22,7 @@ def main():
     # users.extract_report(today)
     # orders.extract_report(today)
     # dim_products_df = dim_products.load_report(today)
-    fct_orders.transform_report(today, **fct_orders_config)
+    fct_orders.validate_and_transform_report(today, **fct_orders_config)
 
 if __name__ == '__main__':
    
