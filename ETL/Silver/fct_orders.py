@@ -3,16 +3,12 @@ from dotenv import load_dotenv
 import pandas as pd
 import google_cloud_storage_utils as gcs
 
-prices = {'SUMO005': 21, 'GAS006': 20}
-
-expected_cols = ['order_line_id', 'order_id', 'user_id', 'item_sku', 'qty', 'item_price', 'date_created']
 
 def load_report(report_date: str) -> pd.DataFrame:
 
     bucket_name = os.getenv('bucket_name')
     report_name = f'order_reports/Order_report_{report_date}.csv'
-    df = pd.read_csv(f'gcs://{bucket_name}/{report_name}')
-    return df
+    return pd.read_csv(f'gcs://{bucket_name}/{report_name}')
 
 
 def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
@@ -31,7 +27,15 @@ def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 
-    df = df.drop_duplicates(keep='first')
+    return df.drop_duplicates(keep='first')
+
+
+def check_unique_ids(df: pd.DataFrame, id_cols: list[str]) -> pd.DataFrame:
+
+    id_cols = [id_cols] if isinstance(id_cols, str) else id_cols
+    for col in id_cols:
+        if not df[col].is_unique:
+            raise ValueError('Report contains duplicate primary keys')
     return df
 
 
@@ -42,10 +46,10 @@ def clean_string_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def clean_date_formats(df: pd.DataFrame, date_column: str | list[str]) -> pd.DataFrame:
+def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
 
-    date_column = [date_column] if isinstance(date_column, str) else date_column
-    for col in date_column:
+    date_cols = [date_cols] if isinstance(date_cols, str) else date_cols
+    for col in date_cols:
         df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True,)
     return df
 
@@ -60,22 +64,31 @@ def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
 
     df['item_price'] = df.groupby('item_sku')['item_price'].transform(lambda x: x.ffill().bfill()) # fill price from other rows
-    df['item_price'] = df['item_price'].fillna(df['item_sku'].map(prices)) # fill price from database as dict
+    # df['item_price'] = df['item_price'].fillna(df['item_sku'].map(prices)) # fill price from database as dict
     return df
 
-def validate_and_clean(report_date: str):
+def add_line_total_col(df: pd.DataFrame) -> pd.DataFrame:
 
-    df = load_report(report_date)
+    df['line_total'] = df['qty'] * df['item_price']
+    df = df.iloc[:, [0, 1, 2, 3, 4, 5, 7, 6]]
+    return df
+
+def load_to_bq(df: pd.DataFrame) -> None:
+
+    gc_project_id = os.getenv('google_cloud_project_id')
+    df.to_gbq(destination_table = 'ecommerce.fct_orders', project_id=gc_project_id, location='eu-west2')
+
+
+def transform_report(report_date: str, expected_cols: list[str], id_cols: list[str], date_cols: list[str]):
+    
+    # df = load_report(report_date)
+    df = pd.read_csv('Order_report_2025-02-19.csv')
     df = check_columns(df, expected_cols)
     df = remove_duplicates(df)
+    df = check_unique_ids(df, id_cols)
     df = clean_string_columns(df)
-    df = clean_date_formats(df, 'date_created')
+    df = clean_date_formats(df, date_cols)
     df = clean_missing_dates(df)
     df = clean_missing_prices(df)
-
-    return df
-
-
-# df.to_csv('export.csv',index=False)
-# print(df.isna().sum())
-# print(df.tail(50))
+    df = add_line_total_col(df)
+    # load_to_bq(df)
