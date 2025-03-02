@@ -19,6 +19,15 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     df = du.clean_date_formats(df, ['Date Created', 'Date Updated'])
     df = du.clean_missing_dates(df)
     df = du.check_positive(df)
+    df = du.rename_columns(
+        df,
+        {'Product SKU': 'item_sku',
+        'Price': 'item_price',
+        'Release Date': 'item_release_date',
+         'Date Created': 'item_creation_date', 
+         'Date Updated': 'item_updated_date',
+        'Active': 'item_active'}
+    )
     # df = du.check_outliers(df)
 #      # load_to_bq(df)
     

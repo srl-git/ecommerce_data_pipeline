@@ -7,8 +7,8 @@ from ETL.Gold import obt
 
 def main():
 
-    date = datetime.now().strftime('%Y-%m-%d')
-    # date = '2025-03-01'
+    # date = datetime.now().strftime('%Y-%m-%d')
+    date = '2025-03-01'
     products_df = products.extract_report(date)
     users_df = users.extract_report(date)
     orders_df = orders.extract_report(date)
@@ -16,7 +16,9 @@ def main():
     dim_products_df = dim_products.validate_and_transform_report(products_df)
     dim_users_df = dim_users.validate_and_transform_report(users_df)
     fct_orders_df = fct_orders.validate_and_transform_report(orders_df)
-    print(fct_orders_df.head())
+    # print(fct_orders_df.head())
+
+    # obt_df.to_csv('obt.csv', index=False)
     # obt_df = obt.join_reports(fct_orders_df, dim_products_df, dim_users_df)
 
 if __name__ == '__main__':

@@ -36,6 +36,7 @@ def clean_strings(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
+    
     date_cols = [date_cols] if isinstance(date_cols, str) else date_cols
     for col in date_cols:
         df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True,)
@@ -72,4 +73,10 @@ def check_outliers(df: pd.DataFrame) -> pd.DataFrame:
         if not outliers.empty:
             print(f'Outlier values found in columns: {list(numeric_cols)}')
             print(outliers)           
+    return df
+
+
+def rename_columns(df: pd.DataFrame, cols: dict[str,str]) -> pd.DataFrame:
+
+    df = df.rename(columns=cols)
     return df

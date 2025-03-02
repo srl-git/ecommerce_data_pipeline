@@ -46,6 +46,11 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     df = du.clean_missing_dates(df)
     df = clean_missing_prices(df)
     df = du.check_positive(df, ['order_line_id'])
+    df = du.rename_columns(
+        df, 
+        {'item_price': 'order_item_price',
+        'date_created': 'order_date_created'}
+    )
     # df = du.check_outliers(df)
     df = add_line_total_col(df)
     #load_to_bq(df)

@@ -18,6 +18,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     df = du.clean_strings(df)
     df = du.clean_date_formats(df, ['date_created'])
     df = du.clean_missing_dates(df)
+    df = du.rename_columns(df, {'date_created': 'user_date_created'})
     # df = du.check_outliers(df)
 #      # load_to_bq(df)
     
