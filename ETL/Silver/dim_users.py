@@ -1,5 +1,6 @@
 import pandas as pd
 import data_utils as du
+import google_cloud_bq_utils as bq
 
 
 def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
@@ -20,6 +21,5 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     df = du.clean_missing_dates(df)
     df = du.rename_columns(df, {'date_created': 'user_date_created'})
     # df = du.check_outliers(df)
-#      # load_to_bq(df)
-    
+    df = bq.load_df_to_bq(df, 'ecommerce.dim_users')   
     return df

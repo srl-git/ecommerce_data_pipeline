@@ -39,7 +39,7 @@ def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
     
     date_cols = [date_cols] if isinstance(date_cols, str) else date_cols
     for col in date_cols:
-        df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True,)
+        df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True)
     return df
 
 

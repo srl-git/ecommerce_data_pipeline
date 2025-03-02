@@ -1,9 +1,6 @@
-import os
-from dotenv import load_dotenv
 import pandas as pd
 import data_utils as du
-
-load_dotenv()
+import google_cloud_bq_utils as bq
 
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
@@ -18,15 +15,6 @@ def add_line_total_col(df: pd.DataFrame) -> pd.DataFrame:
     df = df.iloc[:, [0, 1, 2, 3, 4, 5, 7, 6]]
     return df
 
-def load_to_bq(df: pd.DataFrame) -> None:
-
-    gc_project_id = os.getenv('google_cloud_project_id')
-    df.to_gbq(
-        destination_table='ecommerce.fct_orders',
-        project_id=gc_project_id, 
-        location='eu-west2',
-        if_exists='append'
-    )
     
 def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
     
@@ -46,14 +34,13 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     df = du.clean_missing_dates(df)
     df = clean_missing_prices(df)
     df = du.check_positive(df, ['order_line_id'])
+    df = add_line_total_col(df)
     df = du.rename_columns(
         df, 
         {'item_price': 'order_item_price',
         'date_created': 'order_date_created'}
     )
     # df = du.check_outliers(df)
-    df = add_line_total_col(df)
-    #load_to_bq(df)
-    
+    df = bq.load_df_to_bq(df, 'ecommerce.fct_orders')   
     return df
  
