@@ -4,14 +4,15 @@ import google_cloud_bq_utils as bq
 
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
-    df['item_price'] = df.groupby('item_sku')['item_price'].transform(lambda x: x.ffill().bfill()) # fill price from other rows
+    df.loc[:, 'item_price'] = df.groupby('item_sku')['item_price'].transform(lambda x: x.ffill().bfill()) # fill price from other rows
     # df['item_price'] = df['item_price'].fillna(df['item_sku'].map(prices)) # fill price from database as dict
     return df
 
 
 def add_line_total_col(df: pd.DataFrame) -> pd.DataFrame:
 
-    df['line_total'] = df['qty'] * df['item_price']
+    # df.loc[:, 'line_total'] = df['qty'] * df['item_price']
+    df = df.assign(line_total=df['qty'] * df['item_price'])
     df = df.iloc[:, [0, 1, 2, 3, 4, 5, 7, 6]]
     return df
 

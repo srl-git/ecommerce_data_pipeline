@@ -16,4 +16,16 @@ def load_df_to_bq(df: pd.DataFrame, table: str) -> pd.DataFrame:
     )
     return df
 
-client = bigquery.Client()
+
+def download_df_from_bq(query_or_table : str, project_id: str):
+
+    df = pandas_gbq.read_gbq(query_or_table, project_id)
+    return df
+
+
+def run_bq_query(query: str):
+
+    client = bigquery.Client()
+    result = client.query_and_wait(query)
+    return result
+
