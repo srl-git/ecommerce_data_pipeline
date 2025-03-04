@@ -31,14 +31,18 @@ def check_unique(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
 def clean_strings(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in df.select_dtypes(include=['object']).columns:
-            df.loc[:, col] = df[col].str.strip()
+            df.loc[:, col] = df.loc[:, col].str.strip()
     return df
 
 
 def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
     
-    for col in date_cols:
-        df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True)
+    df.loc[:, date_cols] = df.loc[:, date_cols].apply(pd.to_datetime, errors='coerce', format='mixed', dayfirst=True)
+    df = df.astype({col: 'datetime64[ns]' for col in date_cols})
+
+    # Raises SettingWithCopyWarning:
+    # for col in date_cols:
+    #     df[col] = pd.to_datetime(df[col], errors='coerce', format='mixed', dayfirst=True)
     return df
 
 
@@ -46,7 +50,7 @@ def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in df.select_dtypes(include=['datetime64', 'datetime64[ns]']).columns:
 
-        df.loc[:, col] = df[col].ffill().bfill()
+        df.loc[:, col] = df.loc[:, col].ffill().bfill()
     return df
 
 

@@ -26,7 +26,7 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
     
     report_name = f'product_reports/Product_report_{report_date}.csv'
     dest_bucket = os.getenv('bucket_name','')
-    gcs.upload_to_bucket(report_name, df.to_csv(), dest_bucket)
+    gcs.upload_to_bucket(report_name, df.to_csv(index=False), dest_bucket)
     return df
 
 def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
