@@ -1,8 +1,12 @@
-import pandas as pd
 import google_cloud_bq_utils as bq
+import logger
+
+log = logger.get_logger(__name__)
+
 
 def join_reports(date: str):
-
+    
+    log.info('Joining reports on bigquery table ecommerce.obt.')
     return bq.run_bq_query(f'''
                 INSERT INTO `ecommerce.obt`
                 SELECT
@@ -28,7 +32,3 @@ def join_reports(date: str):
                 WHERE fct_orders.order_date_created = '{date}';
             '''
         )
-
-    # orders_and_users_df = pd.merge(fct_orders_df, dim_users_df, on='user_id', how='left')
-
-    # use SQL to select and join tables from silver layer tables

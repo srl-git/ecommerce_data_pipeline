@@ -1,6 +1,9 @@
 import pandas as pd
 import data_utils as du
 import google_cloud_bq_utils as bq
+import logger
+
+log = logger.get_logger(__name__)
 
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
@@ -38,26 +41,32 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     if df is None:
         return
     
-    df = du.check_columns(
-        df, 
-        ['order_line_id', 'order_id', 
-        'user_id', 'item_sku', 'qty', 
-        'item_price', 'date_created']
-    )
-    df = du.remove_duplicates(df)
-    df = du.check_unique(df, ['order_line_id'])
-    df = du.clean_strings(df)
-    df = du.clean_date_formats(df, ['date_created'])
-    df = du.clean_missing_dates(df)
-    df = clean_missing_prices(df)
-    df = du.check_positive(df, ['order_line_id'])
-    df = add_line_total_col(df)
-    df = du.rename_columns(
-        df, 
-        {'item_price': 'order_item_price',
-        'date_created': 'order_date_created'}
-    )
-    # df = du.check_outliers(df)
-    df = bq.load_df_to_bq(df, 'ecommerce.fct_orders')   
-    return df
- 
+    log.info('Starting validation and transformation on order report.')
+    try:
+        df = du.check_columns(
+            df, 
+            ['order_line_id', 'order_id', 
+            'user_id', 'item_sku', 'qty', 
+            'item_price', 'date_created']
+        )
+        df = du.remove_duplicates(df)
+        df = du.check_unique(df, ['order_line_id'])
+        df = du.clean_strings(df)
+        df = du.clean_date_formats(df, ['date_created'])
+        df = du.clean_missing_dates(df)
+        df = clean_missing_prices(df)
+        df = du.check_positive(df, ['order_line_id'])
+        df = add_line_total_col(df)
+        df = du.rename_columns(
+            df, 
+            {'item_price': 'order_item_price',
+            'date_created': 'order_date_created'}
+        )
+        # df = du.check_outliers(df)
+        log.info(f'Uploading report data to biquery table ecommerce.fct_orders.')
+        df = bq.load_df_to_bq(df, 'ecommerce.fct_orders')   
+        return df
+    except Exception as e:
+        log.error(f'Error when validating and transfroming order report: {e}')
+        return None
+    

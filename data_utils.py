@@ -1,4 +1,7 @@
 import pandas as pd
+import logger
+
+log = logger.get_logger(__name__)
 
 
 def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
@@ -9,7 +12,7 @@ def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
     missing_cols = list(set(expected_cols) - set(cols))
     extra_cols = list(set(cols) - set(expected_cols))
     if extra_cols:
-        print(f'Unexpected extra column(s) in data source: \n{extra_cols}')
+        log.warning(f'Unexpected extra column(s) in data source: \n{extra_cols}')
     if missing_cols:
         raise ValueError(f'Missing column(s) in data source: \n{missing_cols}')
     return df
@@ -49,7 +52,6 @@ def clean_date_formats(df: pd.DataFrame, date_cols: list[str]) -> pd.DataFrame:
 def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in df.select_dtypes(include=['datetime64', 'datetime64[ns]']).columns:
-
         df.loc[:, col] = df.loc[:, col].ffill().bfill()
     return df
 
