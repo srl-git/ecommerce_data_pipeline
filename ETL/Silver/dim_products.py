@@ -35,9 +35,18 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
             'Active': 'item_active'}
         )
         # df = du.check_outliers(df)
-        log.info(f'Uploading report data to biquery table ecommerce.dim_products.')
-        df = bq.load_df_to_bq(df, 'ecommerce.dim_products')
         return df
     except Exception as e:
-        log.error(f'Error when validating and transfroming product report: {e}')
+        log.error(f'Error when validating and transforming product report: {e}')
         return None
+    
+
+def create_silver_table(df: pd.DataFrame | None) -> None:
+    
+    if df is None:
+        return None
+    try:
+        log.info(f'Uploading report data to bigquery table Silver.dim_products.')
+        bq.load_df_to_bq(df, 'Silver.dim_products')
+    except Exception as e:
+        log.error(f'Error writing dim_products report to bigquery: {e}')

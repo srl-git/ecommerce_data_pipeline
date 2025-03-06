@@ -63,10 +63,18 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
             'date_created': 'order_date_created'}
         )
         # df = du.check_outliers(df)
-        log.info(f'Uploading report data to biquery table ecommerce.fct_orders.')
-        df = bq.load_df_to_bq(df, 'ecommerce.fct_orders')   
         return df
     except Exception as e:
         log.error(f'Error when validating and transfroming order report: {e}')
         return None
     
+
+def create_silver_table(df: pd.DataFrame | None) -> None:
+    
+    if df is None:
+        return None
+    try:
+        log.info(f'Uploading report data to biquery table Silver.fct_orders.')
+        bq.load_df_to_bq(df, 'Silver.fct_orders')   
+    except Exception as e:
+        log.error(f'Error writing fct_orders report to bigquery: {e}')
