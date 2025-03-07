@@ -13,7 +13,6 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
 
     report_name = f'order_reports/Order_report_{report_date}.csv'
     source_bucket = os.getenv('source_bucket_name','')
-
     try:
         if not gcs.blob_exists(report_name, source_bucket):
             log.warning(f'No order report dated {report_date} found in {source_bucket}.')

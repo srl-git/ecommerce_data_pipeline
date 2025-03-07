@@ -1,5 +1,4 @@
 from datetime import datetime
-import pandas as pd
 import logger
 from ETL.Bronze import products, users, orders
 from ETL.Silver import fct_orders, dim_products, dim_users
@@ -12,7 +11,7 @@ def main():
     log.info('Starting ETL - Extraction')
 
     # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-05'
+    date = '2025-03-06'
     products_df = products.extract_and_save_report(date)
     users_df = users.extract_and_save_report(date)
     orders_df = orders.extract_and_save_report(date)
@@ -34,6 +33,8 @@ def main():
     obt.create_gold_table(date)
     user_metrics.create_gold_table()
     product_metrics.create_gold_table()
+
+    log.info(f'Pipeline completed')
 
 if __name__ == '__main__':
    
