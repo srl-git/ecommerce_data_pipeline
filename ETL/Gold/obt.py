@@ -6,7 +6,7 @@ log = logger.get_logger(__name__)
 
 def create_gold_table(date: str):
     
-    log.info('Joining reports on bigquery table Gold.obt.')
+    log.info('Joining reports on BigQuery table Gold.obt.')
     return bq.run_bq_query(f'''
                 INSERT INTO `Gold.obt`
                 SELECT

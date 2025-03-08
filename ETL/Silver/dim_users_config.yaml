@@ -1,0 +1,21 @@
+check_columns:
+  expected_cols:
+    - 'user_id'
+    - 'user_name'
+    - 'user_address'
+    - 'user_country'
+    - 'user_email'
+    - 'date_created'
+
+check_unique:
+  cols:
+    - 'user_id'
+
+clean_date_formats:
+  date_cols:
+    - 'date_created'
+
+rename_columns:
+  cols: 
+    'date_created': 'user_date_created'
+        

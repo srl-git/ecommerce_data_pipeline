@@ -1,0 +1,27 @@
+check_columns:
+  expected_cols:
+    - 'Product SKU'
+    - 'Price'
+    - 'Release Date'
+    - 'Date Created'
+    - 'Date Updated'
+    - 'Active'
+
+check_unique:
+  cols:
+    - 'Product SKU'
+
+clean_date_formats:
+  date_cols:
+    - 'Date Created'
+    - 'Date Updated'
+
+rename_columns:
+  cols: 
+    'Product SKU': 'item_sku'
+    'Price': 'item_price' 
+    'Release Date': 'item_release_date'
+    'Date Created': 'item_creation_date'
+    'Date Updated': 'item_updated_date' 
+    'Active': 'item_active'
+        

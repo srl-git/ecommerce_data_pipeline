@@ -12,7 +12,8 @@ def check_columns(df: pd.DataFrame, expected_cols: list[str]) -> pd.DataFrame:
     missing_cols = list(set(expected_cols) - set(cols))
     extra_cols = list(set(cols) - set(expected_cols))
     if extra_cols:
-        log.warning(f'Unexpected extra column(s) in data source: \n{extra_cols}')
+        log.warning(f'Dropping unexpected extra column(s) in data source: \n{extra_cols}')
+        df = df.drop(columns=extra_cols)
     if missing_cols:
         raise ValueError(f'Missing column(s) in data source: \n{missing_cols}')
     return df

@@ -6,7 +6,7 @@ log = logger.get_logger(__name__)
 
 def create_gold_table():
     
-    log.info('Creating/updating user metrics on bigquery table Gold.user_metrics.')
+    log.info('Creating/updating user metrics on BigQuery table Gold.user_metrics.')
     try:
         bq.run_bq_query(f'''
                 CREATE OR REPLACE TABLE Gold.user_metrics AS
@@ -27,4 +27,4 @@ def create_gold_table():
             '''
         )
     except Exception as e:
-        log.error(f'Error while creating user metrics table in bigquery: {e}')
+        log.error(f'Error while creating user metrics table in BigQuery: {e}')

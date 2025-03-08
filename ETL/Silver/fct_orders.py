@@ -1,4 +1,5 @@
 import pandas as pd
+import yaml
 import data_utils as du
 import google_cloud_bq_utils as bq
 import logger
@@ -43,29 +44,22 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     
     log.info('Starting validation and transformation on order report.')
     try:
-        df = du.check_columns(
-            df, 
-            ['order_line_id', 'order_id', 
-            'user_id', 'item_sku', 'qty', 
-            'item_price', 'date_created']
-        )
+        with open('ETL/Silver/fct_orders_config.yaml', 'rt') as f:
+            config = yaml.safe_load(f.read())
+        df = du.check_columns(df, **config.get('check_columns'))
         df = du.remove_duplicates(df)
-        df = du.check_unique(df, ['order_line_id'])
+        df = du.check_unique(df, **config.get('check_unique'))
         df = du.clean_strings(df)
-        df = du.clean_date_formats(df, ['date_created'])
+        df = du.clean_date_formats(df, **config.get('clean_date_formats'))
         df = du.clean_missing_dates(df)
         df = clean_missing_prices(df)
-        df = du.check_positive(df, ['order_line_id'])
+        df = du.check_positive(df, **config('check_positive'))
         df = add_line_total_col(df)
-        df = du.rename_columns(
-            df, 
-            {'item_price': 'order_item_price',
-            'date_created': 'order_date_created'}
-        )
+        df = du.rename_columns(df, **config.get('rename_columns'))
         # df = du.check_outliers(df)
         return df
     except Exception as e:
-        log.error(f'Error when validating and transfroming order report: {e}')
+        log.error(f'Error when validating and transforming order report: {e}')
         return None
     
 
@@ -77,4 +71,4 @@ def create_silver_table(df: pd.DataFrame | None) -> None:
         log.info(f'Uploading report data to biquery table Silver.fct_orders.')
         bq.load_df_to_bq(df, 'Silver.fct_orders')   
     except Exception as e:
-        log.error(f'Error writing fct_orders report to bigquery: {e}')
+        log.error(f'Error writing fct_orders report to BigQuery: {e}')
