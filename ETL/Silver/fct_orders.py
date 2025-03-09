@@ -53,7 +53,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = du.clean_date_formats(df, **config.get('clean_date_formats'))
         df = du.clean_missing_dates(df)
         df = clean_missing_prices(df)
-        df = du.check_positive(df, **config('check_positive'))
+        df = du.check_positive(df, **config.get('check_positive'))
         df = add_line_total_col(df)
         df = du.rename_columns(df, **config.get('rename_columns'))
         # df = du.check_outliers(df)

@@ -7,7 +7,8 @@ log = logger.get_logger(__name__)
 def create_gold_table(date: str):
     
     log.info('Joining reports on BigQuery table Gold.obt.')
-    return bq.run_bq_query(f'''
+    try:
+        bq.run_bq_query(f'''
                 INSERT INTO `Gold.obt`
                 SELECT
                     fct_orders.*,
@@ -17,10 +18,11 @@ def create_gold_table(date: str):
                     dim_users.user_email,
                     dim_users.user_date_created,
                     dim_products.item_price,
-                    dim_products.item_release_date,
                     dim_products.item_creation_date,
                     dim_products.item_updated_date,
                     dim_products.item_active,
+                    DATE_DIFF(fct_orders.order_date_created, dim_products.item_release_date, DAY) AS days_relative_to_release_date,
+                    dim_products.item_release_date
                 FROM
                     `Silver.fct_orders` AS fct_orders
                 LEFT JOIN
@@ -30,5 +32,7 @@ def create_gold_table(date: str):
                     `Silver.dim_products` AS dim_products
                     ON fct_orders.item_sku = dim_products.item_sku
                 WHERE fct_orders.order_date_created = '{date}';
-            '''
+                '''
         )
+    except Exception as e:
+        log.error(f'Error while creating OBT table in BigQuery: {e}')    

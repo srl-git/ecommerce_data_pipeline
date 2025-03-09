@@ -21,4 +21,4 @@ def create_gold_table():
             '''
         )
     except Exception as e:
-        log.error(f'Error while creating product metrics table in BigQuery: {e}')    
+        log.error(f'Error while creating product metrics table in BigQuery: {e}')

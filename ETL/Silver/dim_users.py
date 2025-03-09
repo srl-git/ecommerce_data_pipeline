@@ -22,7 +22,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = du.clean_strings(df)
         df = du.clean_date_formats(df, **config.get('clean_date_formats'))
         df = du.clean_missing_dates(df)
-        df = du.rename_columns(df, **config.get('rename_cols'))
+        df = du.rename_columns(df, **config.get('rename_columns'))
         # df = du.check_outliers(df)
         return df
     except Exception as e:
