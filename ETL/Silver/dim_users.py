@@ -24,6 +24,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = du.clean_missing_dates(df)
         df = du.rename_columns(df, **config.get('rename_columns'))
         # df = du.check_outliers(df)
+        log.info('Completed validation and transformation on user report.')
         return df
     except Exception as e:
         log.error(f'Error when validating and transforming user report: {e}')

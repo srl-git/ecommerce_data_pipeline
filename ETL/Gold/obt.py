@@ -22,7 +22,10 @@ def create_gold_table(date: str):
                     dim_products.item_updated_date,
                     dim_products.item_active,
                     DATE_DIFF(fct_orders.order_date_created, dim_products.item_release_date, DAY) AS days_relative_to_release_date,
-                    dim_products.item_release_date
+                    dim_products.item_release_date,
+                    DATE_DIFF(fct_orders.order_date_created, dim_products.item_creation_date, DAY) AS days_relative_to_announcement_date,
+                    DATE_DIFF(order_date_created, item_release_date, week) AS weeks_relative_to_release_date,
+                    DATE_DIFF(order_date_created, item_creation_date, week) AS weeks_relative_to_announcement_date
                 FROM
                     `Silver.fct_orders` AS fct_orders
                 LEFT JOIN

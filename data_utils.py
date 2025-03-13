@@ -67,20 +67,14 @@ def check_positive(df: pd.DataFrame, ignore_cols: list[str]=[]) -> pd.DataFrame:
     return df
 
 
-def check_outliers(df: pd.DataFrame) -> pd.DataFrame:
+def check_outliers(df: pd.DataFrame, cols: list[str], min: int | float, max: int | float) -> pd.DataFrame:
 
-    id_cols = [col for col in df.columns if '_id' in col]
-    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.difference(id_cols)
-
-    if not numeric_cols.empty:
-        lower_bound = df[numeric_cols].quantile(0.01)
-        upper_bound = df[numeric_cols].quantile(0.99)
-        outliers = df[((df[numeric_cols] < lower_bound) | (df[numeric_cols] > upper_bound)).any(axis=1)]
-
-        if not outliers.empty:
-            print(f'Outlier values found in columns: {list(numeric_cols)}')
-            print(outliers)           
-    return df
+    # outliers_df = (df[cols].lt(min)) & (df[cols].gt(max))
+    outliers_df = df[(df[cols] >= min) & (df[cols] <= max)]
+    if outliers_df.empty:
+        return df
+    else:
+        print(f'Out of range vales in column(s):\n{cols}')
 
 
 def rename_columns(df: pd.DataFrame, cols: dict[str,str]) -> pd.DataFrame:

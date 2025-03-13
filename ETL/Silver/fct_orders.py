@@ -57,6 +57,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = add_line_total_col(df)
         df = du.rename_columns(df, **config.get('rename_columns'))
         # df = du.check_outliers(df)
+        log.info('Completed validation and transformation on order report.')
         return df
     except Exception as e:
         log.error(f'Error when validating and transforming order report: {e}')
