@@ -11,7 +11,7 @@ def main():
     log.info('Starting ETL - Extraction')
 
     # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-12'
+    date = '2025-03-17'
     products_df = products.extract_and_save_report(date)
     users_df = users.extract_and_save_report(date)
     orders_df = orders.extract_and_save_report(date)

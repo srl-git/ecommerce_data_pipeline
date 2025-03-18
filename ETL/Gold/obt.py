@@ -1,4 +1,4 @@
-import google_cloud_bq_utils as bq
+import utils.google_cloud_bq_utils as bq
 import logger
 
 log = logger.get_logger(__name__)
@@ -18,11 +18,11 @@ def create_gold_table(date: str):
                     dim_users.user_email,
                     dim_users.user_date_created,
                     dim_products.item_price,
+                    dim_products.item_release_date,
                     dim_products.item_creation_date,
                     dim_products.item_updated_date,
                     dim_products.item_active,
                     DATE_DIFF(fct_orders.order_date_created, dim_products.item_release_date, DAY) AS days_relative_to_release_date,
-                    dim_products.item_release_date,
                     DATE_DIFF(fct_orders.order_date_created, dim_products.item_creation_date, DAY) AS days_relative_to_announcement_date,
                     DATE_DIFF(order_date_created, item_release_date, week) AS weeks_relative_to_release_date,
                     DATE_DIFF(order_date_created, item_creation_date, week) AS weeks_relative_to_announcement_date

@@ -1,4 +1,4 @@
-import google_cloud_bq_utils as bq
+import utils.google_cloud_bq_utils as bq
 import logger
 
 log = logger.get_logger(__name__)

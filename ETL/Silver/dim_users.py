@@ -1,7 +1,7 @@
 import pandas as pd
 import yaml
-import data_utils as du
-import google_cloud_bq_utils as bq
+import utils.data_utils as du
+import utils.google_cloud_bq_utils as bq
 import logger
 
 log = logger.get_logger(__name__)
@@ -23,7 +23,6 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = du.clean_date_formats(df, **config.get('clean_date_formats'))
         df = du.clean_missing_dates(df)
         df = du.rename_columns(df, **config.get('rename_columns'))
-        # df = du.check_outliers(df)
         log.info('Completed validation and transformation on user report.')
         return df
     except Exception as e:

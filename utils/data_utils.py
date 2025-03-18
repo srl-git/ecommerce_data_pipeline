@@ -57,24 +57,23 @@ def clean_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def check_positive(df: pd.DataFrame, ignore_cols: list[str]=[]) -> pd.DataFrame:
-
-    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.difference(ignore_cols)
-    negative_cols = numeric_cols[(df[numeric_cols] <= 0).any(axis=0)]
-    
-    if not negative_cols.empty:
-            raise ValueError(f'Non-positive values in columns: \n{list(negative_cols)}.')
+def check_ranges(df: pd.DataFrame, column_ranges: dict[str, list], drop: bool = False) -> pd.DataFrame:
+        
+    out_of_range = {}
+    for col, [min_val, max_val] in column_ranges.items():
+        mask = (df[col] < min_val) | (df[col] > max_val)
+        out_of_range_indices = df.index[mask].tolist()
+        if out_of_range_indices:
+            out_of_range[col] = out_of_range_indices
+    if out_of_range:
+        log_str = 'Column(s) containing out of range values:\n'
+        for col, indeces in out_of_range.items():
+            log_str += f'{col}: {indeces}\n'
+        log.warning(log_str)
+        if drop:
+            drop_rows = [row for rows in out_of_range.values() for row in rows]
+            return df.drop(index=drop_rows)
     return df
-
-
-def check_outliers(df: pd.DataFrame, cols: list[str], min: int | float, max: int | float) -> pd.DataFrame:
-
-    # outliers_df = (df[cols].lt(min)) & (df[cols].gt(max))
-    outliers_df = df[(df[cols] >= min) & (df[cols] <= max)]
-    if outliers_df.empty:
-        return df
-    else:
-        print(f'Out of range vales in column(s):\n{cols}')
 
 
 def rename_columns(df: pd.DataFrame, cols: dict[str,str]) -> pd.DataFrame:

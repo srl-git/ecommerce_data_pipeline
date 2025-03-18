@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 import logger
-import google_cloud_storage_utils as gcs
+import utils.google_cloud_storage_utils as gcs
 
 load_dotenv()
 
@@ -34,9 +34,13 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
     report_name = f'product_reports/Product_report_{report_date}.csv'
     dest_bucket = os.getenv('bucket_name','')
     try:
-        gcs.upload_to_bucket(report_name, df.to_csv(index=False), dest_bucket)
-        log.info(f'Product report dated {report_date} saved to {dest_bucket}.')
-        return df
+        if gcs.blob_exists(report_name, dest_bucket):
+            log.warning(f'Product report dated {report_date} already exists in {dest_bucket}.')
+            return df
+        else:
+            gcs.upload_to_bucket(report_name, df.to_csv(index=False), dest_bucket)
+            log.info(f'Product report dated {report_date} saved to {dest_bucket}.')
+            return df
     except Exception as e:
         log.error(f'Error saving product report to {dest_bucket}: {e}')
         return None

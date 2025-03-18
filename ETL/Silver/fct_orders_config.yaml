@@ -16,10 +16,12 @@ clean_date_formats:
   date_cols:
     - 'date_created'
 
-check_positive:
-  ignore_cols:
-    - 'order_line_id'
-    
+check_ranges:
+  column_ranges:
+    'qty': [1, 20]
+    'item_price': [0, 100]
+  drop: false
+
 rename_columns:
   cols: 
     'item_price': 'order_item_price'
