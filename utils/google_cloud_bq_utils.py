@@ -1,7 +1,7 @@
 from google.cloud import bigquery
 import pandas as pd
 import pandas_gbq
-import logger
+import utils.logger as logger
 
 log = logger.get_logger(__name__)
 

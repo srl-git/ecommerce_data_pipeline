@@ -1,17 +1,17 @@
 from datetime import datetime
-import logger
+import utils.logger as logger
 from ETL.Bronze import products, users, orders
 from ETL.Silver import fct_orders, dim_products, dim_users
 from ETL.Gold import obt, user_metrics, product_metrics
 
 
 def main():
-
+    
     log = logger.get_logger(__name__)
     log.info('Starting ETL - Extraction')
 
     # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-17'
+    date = '2025-03-23'
     products_df = products.extract_and_save_report(date)
     users_df = users.extract_and_save_report(date)
     orders_df = orders.extract_and_save_report(date)

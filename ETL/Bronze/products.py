@@ -1,13 +1,16 @@
 import os
+import requests
+
 import pandas as pd
 from dotenv import load_dotenv
-import logger
+
+import utils.logger as logger
 import utils.google_cloud_storage_utils as gcs
+from utils.google_cloud_auth import get_identity_token
 
 load_dotenv()
 
 log = logger.get_logger(__name__)
-
 
 def extract_report(report_date: str) -> pd.DataFrame | None:
 
@@ -24,6 +27,27 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
     except Exception as e:
         log.error(f'Error extracting {report_name} from {source_bucket}: {e}')
         return None
+
+
+def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
+
+    try:
+        api_end_point = os.getenv('api_end_point')
+        url = f'{api_end_point}/products?date_updated={report_date}'
+
+        identity_token = get_identity_token()
+        auth_header = {"Authorization": "Bearer " + identity_token}
+
+        response = requests.get(url, headers=auth_header)
+        if response.status_code != 200:
+            log.error(f"Error fetching Product data: {response.status_code}, {response.text}")
+            return None
+        else:
+            data = response.json()
+            df = pd.DataFrame.from_dict(data)
+            return df
+    except Exception as e:
+        log.error(f'Error fetching Product report: {e}')
 
 
 def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:
@@ -56,3 +80,4 @@ def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
     except Exception as e:
         log.error(f'Error in extract_and_save_report for product report dated {report_date}: {e}')
         return None
+    

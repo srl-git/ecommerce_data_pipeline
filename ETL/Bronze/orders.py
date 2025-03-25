@@ -1,7 +1,9 @@
 import os
+
 import pandas as pd
 from dotenv import load_dotenv
-import logger
+
+import utils.logger as logger
 import utils.google_cloud_storage_utils as gcs
 
 load_dotenv()

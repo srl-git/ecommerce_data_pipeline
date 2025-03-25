@@ -1,8 +1,9 @@
 import pandas as pd
 import yaml
+
 import utils.data_utils as du
 import utils.google_cloud_bq_utils as bq
-import logger
+import utils.logger as logger
 
 log = logger.get_logger(__name__)
 
