@@ -11,7 +11,7 @@ def main():
     log.info('Starting ETL - Extraction')
 
     # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-23'
+    date = '2025-03-27'
     products_df = products.extract_and_save_report(date)
     users_df = users.extract_and_save_report(date)
     orders_df = orders.extract_and_save_report(date)
@@ -31,8 +31,8 @@ def main():
     log.info('Starting ETL - Load')
 
     obt.create_gold_table(date)
-    user_metrics.create_gold_table(date)
-    product_metrics.create_gold_table(date)
+    # user_metrics.create_gold_table(date)
+    # product_metrics.create_gold_table(date)
 
     log.info(f'Pipeline completed')
 

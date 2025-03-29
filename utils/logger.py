@@ -11,6 +11,8 @@ def get_logger(name):
     logger = logging.getLogger(name)
     console_handler = logging.StreamHandler()
     logger.addHandler(console_handler)
+    console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
     return logger
 
 
