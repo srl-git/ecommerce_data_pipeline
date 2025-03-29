@@ -1,9 +1,6 @@
 from google.cloud import bigquery
 import pandas as pd
 import pandas_gbq
-# import utils.logger as logger
-
-# log = logger.get_logger(__name__)
 
 
 def load_df_to_bq(df: pd.DataFrame, table: str) -> pd.DataFrame:

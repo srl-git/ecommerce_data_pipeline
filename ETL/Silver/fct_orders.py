@@ -70,6 +70,9 @@ def create_silver_table(df: pd.DataFrame | None) -> None:
         return None
     try:
         log.info(f'Uploading report data to BigQuery table Silver.fct_orders.')
-        bq.load_df_to_bq(df, 'Silver.fct_orders')   
+        bq.upsert_df_to_bq(
+            df=df,
+            table='Silver.fct_orders',
+            key_col='order_line_id')
     except Exception as e:
         log.error(f'Error writing fct_orders report to BigQuery: {e}')
