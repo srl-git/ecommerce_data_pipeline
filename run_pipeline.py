@@ -1,38 +1,46 @@
 from datetime import datetime
+
 import utils.logger as logger
 from ETL.Bronze import products, users, orders
 from ETL.Silver import fct_orders, dim_products, dim_users
 from ETL.Gold import obt, user_metrics, product_metrics
 
 
-def main():
-    
-    log = logger.get_logger(__name__)
-    log.info('Starting ETL - Extraction')
+def extract(date: str) -> None:
 
-    # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-28'
-    products_df = products.extract_and_save_report(date)
-    users_df = users.extract_and_save_report(date)
-    orders_df = orders.extract_and_save_report(date)
+    products.extract_and_save_report(date)
+    users.extract_and_save_report(date)
+    orders.extract_and_save_report(date)
 
-    log.info('Starting ETL - Transformation')
 
-    dim_products.create_silver_table(
-        dim_products.validate_and_transform_report(products_df)
-    )
-    dim_users.create_silver_table(
-        dim_users.validate_and_transform_report(users_df)
-    )
-    fct_orders.create_silver_table(
-        fct_orders.validate_and_transform_report(orders_df)
-    )
+def transform(date: str) -> None:
 
-    log.info('Starting ETL - Load')
+    dim_products.create_silver_table(date)
+    dim_users.create_silver_table(date)
+    fct_orders.create_silver_table(date)
+
+
+def load(date: str) -> None:
 
     obt.create_gold_table(date)
     # user_metrics.create_gold_table(date)
     # product_metrics.create_gold_table(date)
+
+
+def main() -> None:
+    
+    log = logger.get_logger(__name__)
+    # date = datetime.now().strftime('%Y-%m-%d')
+    date = '2025-03-29'
+
+    log.info('Starting ETL - Extraction')
+    extract(date)
+
+    log.info('Starting ETL - Transformation')
+    transform(date)
+
+    log.info('Starting ETL - Load')
+    load(date)
 
     log.info(f'Pipeline completed')
 

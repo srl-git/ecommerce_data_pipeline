@@ -1,9 +1,10 @@
 from google.cloud import bigquery
+from google.cloud.bigquery.table import RowIterator
 import pandas as pd
 import pandas_gbq
 
 
-def load_df_to_bq(df: pd.DataFrame, table: str) -> pd.DataFrame:
+def load_df_to_bq(df: pd.DataFrame, table: str) -> None:
 
     if df is None:
         return
@@ -13,10 +14,10 @@ def load_df_to_bq(df: pd.DataFrame, table: str) -> pd.DataFrame:
         if_exists='append',
         location='europe-west2'
     )
-    return df
+    return
 
 
-def upsert_df_to_bq(df: pd.DataFrame, table: str, key_col: str) -> pd.DataFrame:
+def upsert_df_to_bq(df: pd.DataFrame, table: str, key_col: str) -> None:
     
     client = bigquery.Client()
     staging_table = f'{table}_staging'
@@ -47,17 +48,16 @@ def upsert_df_to_bq(df: pd.DataFrame, table: str, key_col: str) -> pd.DataFrame:
     query_job = client.query(merge_query)
     query_job.result()
     client.delete_table(staging_table, not_found_ok=True)
+    return
 
-    return df
 
-
-def download_df_from_bq(query_or_table : str, project_id: str):
+def download_df_from_bq(query_or_table : str, project_id: str) -> pd.DataFrame | None:
 
     df = pandas_gbq.read_gbq(query_or_table, project_id)
     return df
 
 
-def run_bq_query(query: str):
+def run_bq_query(query: str) -> RowIterator | None:
 
     client = bigquery.Client()
     result = client.query_and_wait(query)

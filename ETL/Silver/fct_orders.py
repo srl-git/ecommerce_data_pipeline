@@ -1,12 +1,34 @@
+import os
+
+from dotenv import load_dotenv
 import pandas as pd
 import yaml
 
 import utils.data_utils as du
+import utils.google_cloud_storage_utils as gcs
 import utils.google_cloud_bq_utils as bq
 import utils.logger as logger
 
+load_dotenv()
+
 log = logger.get_logger(__name__)
 
+
+def extract_report(report_date: str) -> pd.DataFrame | None:
+
+    report_name = f'order_reports/Order_report_{report_date}.csv'
+    bucket = os.getenv('bucket_name','')
+
+    try:
+        if not gcs.blob_exists(report_name, bucket):
+            log.warning(f'No order report dated {report_date} found in {bucket}.')
+            return None
+        else:
+            return pd.read_csv(f'gcs://{bucket}/{report_name}')
+    except Exception as e:
+        log.error(f'Error extracting {report_name} from {bucket}: {e}')
+        return None
+    
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -42,8 +64,8 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     
     if df is None:
         return
-    
     log.info('Starting validation and transformation on order report.')
+    
     try:
         with open('ETL/Silver/fct_orders_config.yaml', 'rt') as f:
             config = yaml.safe_load(f.read())
@@ -64,8 +86,8 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         return None
     
 
-def create_silver_table(df: pd.DataFrame | None) -> None:
-    
+def load_report_to_bq(df: pd.DataFrame | None) -> None:
+
     if df is None:
         return None
     try:
@@ -76,3 +98,9 @@ def create_silver_table(df: pd.DataFrame | None) -> None:
             key_col='order_line_id')
     except Exception as e:
         log.error(f'Error writing fct_orders report to BigQuery: {e}')
+
+def create_silver_table(date: str) -> None:
+    
+    report = extract_report(date)
+    transformed_report = validate_and_transform_report(report)
+    load_report_to_bq(transformed_report)
