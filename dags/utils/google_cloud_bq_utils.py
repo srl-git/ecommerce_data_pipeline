@@ -4,30 +4,32 @@ import pandas as pd
 import pandas_gbq
 
 
-def load_df_to_bq(df: pd.DataFrame, table: str) -> None:
+def load_df_to_bq(df: pd.DataFrame, table: str, replace = False) -> None:
 
     if df is None:
         return
-    pandas_gbq.to_gbq(
-        dataframe=df,
-        destination_table=table,
-        if_exists='append',
-        location='europe-west2'
+    
+    client = bigquery.Client()
+    job_config = bigquery.LoadJobConfig(
+        write_disposition='WRITE_TRUNCATE' if replace else 'WRITE_APPEND',
     )
+    job = client.load_table_from_dataframe(
+        dataframe=df,
+        destination=table,
+        job_config=job_config
+    )
+    job.result()
     return
 
 
 def upsert_df_to_bq(df: pd.DataFrame, table: str, key_col: str) -> None:
     
+    if df is None:
+        return
+    
     client = bigquery.Client()
     staging_table = f'{table}_staging'
-
-    pandas_gbq.to_gbq(
-        dataframe=df,
-        destination_table=staging_table,
-        if_exists='replace',
-        location='europe-west2'
-    )
+    load_df_to_bq(df, staging_table, replace=True)
 
     cols = [col for col in df.columns]
     update_set_clause = ',\n'.join(f'T.{col} = S.{col}' for col in cols)

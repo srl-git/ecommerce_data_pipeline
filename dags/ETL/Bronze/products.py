@@ -15,7 +15,7 @@ log = logger.get_logger(__name__)
 def extract_report(report_date: str) -> pd.DataFrame | None:
 
     report_name = f'product_reports/Product_report_{report_date}.csv'
-    source_bucket = os.getenv('source_bucket_name','')
+    source_bucket = os.getenv('SOURCE_BUCKET_NAME','')
 
     try:
         if not gcs.blob_exists(report_name, source_bucket):
@@ -26,13 +26,13 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
             return pd.read_csv(f'gcs://{source_bucket}/{report_name}')
     except Exception as e:
         log.error(f'Error extracting {report_name} from {source_bucket}: {e}')
-        return None
+        raise
 
 
 def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
 
     try:
-        api_end_point = os.getenv('api_end_point')
+        api_end_point = os.getenv('API_END_POINT')
         url = f'{api_end_point}/products?date_updated={report_date}'
 
         identity_token = get_identity_token()
@@ -41,13 +41,14 @@ def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
         response = requests.get(url, headers=auth_header)
         if response.status_code != 200:
             log.error(f"Error fetching Product data: {response.status_code}, {response.text}")
-            return None
+            raise ConnectionError
         else:
             data = response.json()
             df = pd.DataFrame.from_dict(data)
             return df
     except Exception as e:
         log.error(f'Error fetching Product report: {e}')
+        raise
 
 
 def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:
@@ -56,7 +57,7 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
         return None
     
     report_name = f'product_reports/Product_report_{report_date}.csv'
-    dest_bucket = os.getenv('bucket_name','')
+    dest_bucket = os.getenv('DEST_BUCKET_NAME','')
     try:
         if gcs.blob_exists(report_name, dest_bucket):
             log.warning(f'Product report dated {report_date} already exists in {dest_bucket}.')
@@ -67,7 +68,7 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
             return df
     except Exception as e:
         log.error(f'Error saving product report to {dest_bucket}: {e}')
-        return None
+        raise
 
 
 def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
@@ -79,5 +80,5 @@ def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
         return df
     except Exception as e:
         log.error(f'Error in extract_and_save_report for product report dated {report_date}: {e}')
-        return None
+        raise
     

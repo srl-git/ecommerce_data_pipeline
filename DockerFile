@@ -1,16 +1,5 @@
-FROM python:3.12
+FROM apache/airflow:2.10.5
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+COPY requirements.txt /
 
-WORKDIR /app
-
-COPY requirements.txt .
-RUN python -m pip install --no-cache-dir -r requirements.txt
-
-COPY . /app
-
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
-
-CMD ["python", "run_pipeline.py"]
+RUN pip install --no-cache-dir "apache-airflow==${AIRFLOW_VERSION}" -r /requirements.txt

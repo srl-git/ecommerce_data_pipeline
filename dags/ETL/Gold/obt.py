@@ -38,4 +38,5 @@ def create_gold_table(date: str):
                 '''
         )
     except Exception as e:
-        log.error(f'Error while creating OBT table in BigQuery: {e}')    
+        log.error(f'Error while creating OBT table in BigQuery: {e}')
+        raise

@@ -31,7 +31,7 @@ def main() -> None:
     
     log = logger.get_logger(__name__)
     # date = datetime.now().strftime('%Y-%m-%d')
-    date = '2025-03-29'
+    date = '2025-04-04'
 
     log.info('Starting ETL - Extraction')
     extract(date)

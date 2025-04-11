@@ -17,17 +17,17 @@ log = logger.get_logger(__name__)
 def extract_report(report_date: str) -> pd.DataFrame | None:
 
     report_name = f'order_reports/Order_report_{report_date}.csv'
-    bucket = os.getenv('bucket_name','')
+    bucket = os.getenv('DEST_BUCKET_NAME','')
 
     try:
         if not gcs.blob_exists(report_name, bucket):
             log.warning(f'No order report dated {report_date} found in {bucket}.')
-            return None
+            raise FileNotFoundError
         else:
             return pd.read_csv(f'gcs://{bucket}/{report_name}')
     except Exception as e:
         log.error(f'Error extracting {report_name} from {bucket}: {e}')
-        return None
+        raise
     
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
@@ -41,12 +41,14 @@ def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
         database_prices = bq.run_bq_query(
             f'''
                 SELECT item_sku, item_price
-                FROM ecommerce.dim_products
+                FROM Silver.dim_products
                 WHERE item_sku IN UNNEST ({missing_price_items});
             '''
         )
-        price_dict = {row[0]: row[1] for row in database_prices}
-        df['item_price'] = df['item_price'].fillna(df['item_sku'].map(price_dict))
+        if database_prices:
+            price_dict = {row[0]: row[1] for row in database_prices}
+            df['item_price'] = df['item_price'].fillna(df['item_sku'].map(price_dict))
+        
         if df.loc[:, 'item_price'].isna().any():
             missing_price_items = df.loc[:, 'item_sku'][df['item_price'].isnull()].to_list()
             raise ValueError(f'The following item_sku values have no item_price values in the report or product database:\n{missing_price_items}')
@@ -67,7 +69,10 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     log.info('Starting validation and transformation on order report.')
     
     try:
-        with open('ETL/Silver/fct_orders_config.yaml', 'rt') as f:
+        config_file_path = 'ETL/Silver/fct_orders_config.yaml'
+        if os.getenv('AIRFLOW_HOME'):
+            config_file_path = f'/opt/airflow/dags/{config_file_path}'
+        with open(config_file_path, 'rt') as f:
             config = yaml.safe_load(f.read())
         df = du.check_columns(df, **config.get('check_columns'))
         df = du.remove_duplicates(df)
@@ -83,7 +88,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         return df
     except Exception as e:
         log.error(f'Error when validating and transforming order report: {e}')
-        return None
+        raise
     
 
 def load_report_to_bq(df: pd.DataFrame | None) -> None:
@@ -98,6 +103,7 @@ def load_report_to_bq(df: pd.DataFrame | None) -> None:
             key_col='order_line_id')
     except Exception as e:
         log.error(f'Error writing fct_orders report to BigQuery: {e}')
+        raise
 
 def create_silver_table(date: str) -> None:
     

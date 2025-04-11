@@ -2,6 +2,14 @@ README.md
 TODO
 *.csv
 
+# Airflow
+astro
+airflow_settings.yaml
+logs/
+airflow.db
+airflow.cfg
+
+
 # Git
 .git
 .gitignore

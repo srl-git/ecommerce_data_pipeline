@@ -3,6 +3,11 @@ TODO
 /.vscode/
 *.csv
 
+# Airflow
+astro
+airflow_settings.yaml
+config
+logs
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
