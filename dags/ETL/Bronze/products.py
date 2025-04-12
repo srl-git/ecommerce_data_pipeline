@@ -39,16 +39,20 @@ def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
         auth_header = {"Authorization": "Bearer " + identity_token}
 
         response = requests.get(url, headers=auth_header)
-        if response.status_code != 200:
-            log.error(f"Error fetching Product data: {response.status_code}, {response.text}")
-            raise ConnectionError
-        else:
-            data = response.json()
-            df = pd.DataFrame.from_dict(data)
-            return df
+        match response.status_code:
+            case 200:
+                data = response.json()
+                df = pd.DataFrame.from_dict(data)
+                return df
+            case 404:
+                log.warning(f"Error fetching Product data: {response.status_code}, {response.text}")
+                return None
+            case _:
+                log.error(f"Error fetching Product data: {response.status_code}, {response.text}")
+                raise ConnectionError
     except Exception as e:
         log.error(f'Error fetching Product report: {e}')
-        raise
+        return None
 
 
 def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:
@@ -74,7 +78,8 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
 def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
     
     try:
-        df = extract_report(report_date)
+        # df = extract_report(report_date)
+        df = extract_report_from_api(report_date)
         if df is not None:
             df = save_df_to_cloud_storage(report_date, df)
         return df
