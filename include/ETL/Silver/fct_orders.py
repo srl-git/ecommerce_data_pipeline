@@ -71,7 +71,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
     try:
         config_file_path = 'ETL/Silver/fct_orders_config.yaml'
         if os.getenv('AIRFLOW_HOME'):
-            config_file_path = f'/opt/airflow/dags/{config_file_path}'
+            config_file_path = f'/opt/airflow/include/{config_file_path}'
         with open(config_file_path, 'rt') as f:
             config = yaml.safe_load(f.read())
         df = du.check_columns(df, **config.get('check_columns'))

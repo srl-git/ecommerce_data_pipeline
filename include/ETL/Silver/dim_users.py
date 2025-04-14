@@ -16,30 +16,31 @@ log = logger.get_logger(__name__)
 
 def extract_report(report_date: str) -> pd.DataFrame | None:
 
-    report_name = f'product_reports/Product_report_{report_date}.csv'
+    report_name = f'user_reports/User_report_{report_date}.csv'
     bucket = os.getenv('DEST_BUCKET_NAME','')
 
     try:
         if not gcs.blob_exists(report_name, bucket):
-            log.warning(f'No product report dated {report_date} found in {bucket}.')
-            return None
+            log.warning(f'No user report dated {report_date} found in {bucket}.')
+            raise FileNotFoundError
         else:
+            log.info(f'User report dated {report_date} extracted from {bucket}.')
             return pd.read_csv(f'gcs://{bucket}/{report_name}')
     except Exception as e:
         log.error(f'Error extracting {report_name} from {bucket}: {e}')
         raise
-
+    
 
 def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
     
     if df is None:
         return
-    log.info('Starting validation and transformation on product report.')
+    log.info('Starting validation and transformation on user report.')
     
     try:
-        config_file_path = 'ETL/Silver/dim_products_config.yaml'
+        config_file_path = 'ETL/Silver/dim_users_config.yaml'
         if os.getenv('AIRFLOW_HOME'):
-            config_file_path = f'/opt/airflow/dags/{config_file_path}'
+            config_file_path = f'/opt/airflow/include/{config_file_path}'
         with open(config_file_path, 'rt') as f:
             config = yaml.safe_load(f.read())
         df = du.check_columns(df, **config.get('check_columns')) 
@@ -48,12 +49,11 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = du.clean_strings(df)
         df = du.clean_date_formats(df, **config.get('clean_date_formats'))
         df = du.clean_missing_dates(df)
-        df = du.check_ranges(df, **config.get('check_ranges'))
         df = du.rename_columns(df, **config.get('rename_columns'))
-        log.info('Completed validation and transformation on product report.')
+        log.info('Completed validation and transformation on user report.')
         return df
     except Exception as e:
-        log.error(f'Error when validating and transforming product report: {e}')
+        log.error(f'Error when validating and transforming user report: {e}')
         raise
 
 
@@ -61,19 +61,18 @@ def load_report_to_bq(df: pd.DataFrame | None) -> None:
 
     if df is None:
         return None
-    log.info(f'Uploading transformed product report data to BigQuery table Silver.dim_products.')
-
+    log.info(f'Uploading transformed user report data to BigQuery table Silver.dim_users.')
+    
     try:
         bq.upsert_df_to_bq(
             df=df,
-            table='Silver.dim_products',
-            key_col='item_sku')
+            table='Silver.dim_users',
+            key_col='user_id')
     except Exception as e:
-        log.error(f'Error writing dim_products report to BigQuery: {e}')
+        log.error(f'Error writing dim_users report to BigQuery: {e}')
         raise
 
-
-def create_silver_table(date: str) -> None:
+def create_silver_table(date:str) -> None:
     
     report = extract_report(date)
     transformed_report = validate_and_transform_report(report)

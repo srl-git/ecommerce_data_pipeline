@@ -3,17 +3,14 @@ from datetime import timedelta
 from airflow.decorators import dag, task, task_group
 from pendulum import datetime
 
-from ETL.Bronze import products, users, orders
-from ETL.Silver import fct_orders, dim_products, dim_users
-from ETL.Gold import obt, user_metrics, product_metrics
-
 
 default_args = {
     'owner': 'Sam RL',
     'depends_on_past': True,
-    'start_date': datetime(2025, 4, 10),
+    'start_date': datetime(2025, 4, 12),
     'catchup': False,
     'email_on_failure': True,
+    'email_on_success': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'execution_timeout': timedelta(minutes=20)
@@ -33,31 +30,38 @@ def ecommerce_ETL_pipeline():
 
         @task
         def extract_products_task(ds):
+            from ETL.Bronze import products
             products.extract_and_save_report(ds)
 
         @task
         def extract_users_task(ds):
+            from ETL.Bronze import users
             users.extract_and_save_report(ds)
 
         @task
         def extract_orders_task(ds):
+            from ETL.Bronze import orders
             orders.extract_and_save_report(ds)
 
         extract_products_task() >> extract_users_task() >> extract_orders_task()
     
+
     @task_group
     def transform():
 
         @task
         def transform_products_task(ds):
+            from ETL.Silver import dim_products
             dim_products.create_silver_table(ds)
 
         @task
         def transform_users_task(ds):
+            from ETL.Silver import dim_users
             dim_users.create_silver_table(ds)
 
         @task
         def transform_orders_task(ds):
+            from ETL.Silver import fct_orders
             fct_orders.create_silver_table(ds)
    
         transform_products_task() >> transform_users_task() >> transform_orders_task()
@@ -68,10 +72,10 @@ def ecommerce_ETL_pipeline():
 
         @task
         def load_obt_task(ds):
+            from ETL.Gold import obt
             obt.create_gold_table(ds)
 
         load_obt_task()
-
 
     extract() >> transform() >> load()
 

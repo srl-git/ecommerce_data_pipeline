@@ -30,6 +30,8 @@ def load(date: str) -> None:
 def main() -> None:
     
     log = logger.get_logger(__name__)
+
+    # logger.setup_cloud_logging()
     # date = datetime.now().strftime('%Y-%m-%d')
     date = '2025-04-04'
 

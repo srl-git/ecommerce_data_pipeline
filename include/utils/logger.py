@@ -10,11 +10,9 @@ def get_logger(name):
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    console_handler = logging.StreamHandler()
-    logger.addHandler(console_handler)
-    console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(console_formatter)
+    if not logger.handlers:
+        format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(format)
+        logger.addHandler(console_handler)
     return logger
-
-
-# setup_cloud_logging()
