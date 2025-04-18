@@ -1,33 +1,31 @@
 check_columns:
   expected_cols:
-    - 'Product SKU'
-    - 'Price'
-    - 'Release Date'
-    - 'Date Created'
-    - 'Date Updated'
-    - 'Active'
+    - 'item_sku'
+    - 'item_price' 
+    - 'release_date'
+    - 'date_created'
+    - 'date_updated' 
+    - 'active'
 
 check_unique:
   cols:
-    - 'Product SKU'
+    - 'item_sku'
 
 clean_date_formats:
   date_cols:
-    - 'Release Date'
-    - 'Date Created'
-    - 'Date Updated'
+    - 'release_date'
+    - 'date_created'
+    - 'date_updated' 
 
 check_ranges:
   column_ranges:
-    'Price': [0, 100]
+    'item_price': [0, 100]
   drop: false
   
 rename_columns:
   cols: 
-    'Product SKU': 'item_sku'
-    'Price': 'item_price' 
-    'Release Date': 'item_release_date'
-    'Date Created': 'item_creation_date'
-    'Date Updated': 'item_updated_date' 
-    'Active': 'item_active'
+    'release_date': 'item_release_date'
+    'date_created': 'item_creation_date'
+    'date_updated': 'item_updated_date' 
+    'active': 'item_active'
 
