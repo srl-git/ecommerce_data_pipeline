@@ -1,7 +1,10 @@
+import os
 from datetime import timedelta
 
 from airflow.decorators import dag, task, task_group
 from pendulum import datetime
+
+from utils.airflow_task_notification import notify_task_state
 
 
 default_args = {
@@ -9,11 +12,15 @@ default_args = {
     'depends_on_past': True,
     'start_date': datetime(2025, 4, 12),
     'catchup': False,
-    'email_on_failure': True,
-    'email_on_success': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
-    'execution_timeout': timedelta(minutes=20)
+    'execution_timeout': timedelta(minutes=20),
+    'email_on_success': True,
+    'email_on_failure': True,
+    'email': [os.getenv('EMAIL')],
+    'on_success_callback': notify_task_state,
+    'on_failure_callback': notify_task_state,
+    'on_retry_callback': notify_task_state
 }
 
 @dag(
@@ -27,7 +34,9 @@ def ecommerce_ETL_pipeline():
     
     @task_group
     def extract():
-
+        """
+        Extract raw data from API/CSV reports and store in Google Cloud Storage.
+        """
         @task
         def extract_products_task(ds):
             from ETL.Bronze import products
@@ -48,7 +57,9 @@ def ecommerce_ETL_pipeline():
 
     @task_group
     def transform():
-
+        """
+        Vaildate/transform raw data and load to BigQuery.
+        """
         @task
         def transform_products_task(ds):
             from ETL.Silver import dim_products
@@ -69,15 +80,33 @@ def ecommerce_ETL_pipeline():
 
     @task_group
     def load():
-
+        """
+        Aggregate/join data and load to BigQuery.
+        """
         @task
         def load_obt_task(ds):
             from ETL.Gold import obt
             obt.create_gold_table(ds)
 
-        load_obt_task()
+        @task
+        def load_user_metrics_task():
+            from ETL.Gold import user_metrics
+            user_metrics.create_gold_table()
+
+        @task
+        def load_product_metrics_task():
+            from ETL.Gold import product_metrics
+            product_metrics.create_gold_table()
+
+        @task
+        def load_daily_sales_report_task():
+            from ETL.Gold import daily_sales_report
+            daily_sales_report.create_gold_table()
+
+        load_obt_task() >> load_user_metrics_task() >> load_product_metrics_task() >> load_daily_sales_report_task()
+
 
     extract() >> transform() >> load()
 
     
-ecommerce_ETL_pipeline()
+dag = ecommerce_ETL_pipeline()

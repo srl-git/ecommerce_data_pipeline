@@ -42,17 +42,19 @@ def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
         match response.status_code:
             case 200:
                 data = response.json()
-                df = pd.DataFrame.from_dict(data)
-                return df
+                return pd.DataFrame.from_dict(data)
             case 404:
-                log.warning(f"Error fetching Product data: {response.status_code}, {response.text}")
+                log.warning(f'No product data for {report_date}: {response.status_code}, {response.text}')
                 return None
+            case 500:
+                log.error(f'Error fetching Product data: {response.status_code}, {response.text}')
+                raise ConnectionError
             case _:
-                log.error(f"Error fetching Product data: {response.status_code}, {response.text}")
+                log.error(f'Error fetching Product data: {response.status_code}, {response.text}')
                 raise ConnectionError
     except Exception as e:
         log.error(f'Error fetching Product report: {e}')
-        return None
+        raise
 
 
 def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:

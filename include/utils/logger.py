@@ -10,6 +10,7 @@ def get_logger(name):
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
+    logger.propagate = False
     if not logger.handlers:
         format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console_handler = logging.StreamHandler()

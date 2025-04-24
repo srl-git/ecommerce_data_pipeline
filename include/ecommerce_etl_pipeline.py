@@ -3,7 +3,7 @@ from datetime import datetime
 import utils.logger as logger
 from ETL.Bronze import products, users, orders
 from ETL.Silver import fct_orders, dim_products, dim_users
-from ETL.Gold import obt, user_metrics, product_metrics
+from ETL.Gold import obt, user_metrics, product_metrics, daily_sales_report
 
 
 def extract(date: str) -> None:
@@ -23,9 +23,9 @@ def transform(date: str) -> None:
 def load(date: str) -> None:
 
     obt.create_gold_table(date)
-    # user_metrics.create_gold_table(date)
-    # product_metrics.create_gold_table(date)
-
+    user_metrics.create_gold_table()
+    product_metrics.create_gold_table()
+    daily_sales_report.create_gold_table()
 
 def main() -> None:
     

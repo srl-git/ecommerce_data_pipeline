@@ -1,5 +1,6 @@
 from google.cloud import bigquery
 from google.cloud.bigquery.table import RowIterator
+from google.cloud.exceptions import NotFound
 import pandas as pd
 import pandas_gbq
 
@@ -64,3 +65,13 @@ def run_bq_query(query: str) -> RowIterator | None:
     client = bigquery.Client()
     result = client.query_and_wait(query)
     return result
+
+def check_table_exists(table: str) -> bool:
+
+    client = bigquery.Client()
+    try:
+        client.get_table(table)
+        return True
+    except NotFound:
+        return False
+    

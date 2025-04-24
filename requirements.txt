@@ -6,3 +6,4 @@ dotenv==0.9.9
 google-cloud-storage==3.0.0
 google-cloud-logging==3.11.4
 PyYAML==6.0.2
+python-telegram-bot==22.0

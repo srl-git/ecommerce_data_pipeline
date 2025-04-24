@@ -4,7 +4,7 @@ import utils.logger as logger
 log = logger.get_logger(__name__)
 
 
-def create_gold_table(date: str):
+def create_gold_table(date: str) -> None:
     
     log.info('Joining reports on BigQuery table Gold.obt.')
     try:
