@@ -14,7 +14,6 @@ async def send_telegram_msg(text: str):
     Return:
         None
     """
-
     token = os.getenv('TELEGRAM_TOKEN','')
     chat_id = os.getenv('TELEGRAM_CHAT_ID','')
     bot = telegram.Bot(token)
@@ -32,7 +31,6 @@ def notify_task_state(context):
     Returns:
         None
     """
-
     task = context.get('task_instance')
 
     if task:

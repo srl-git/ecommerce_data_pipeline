@@ -6,7 +6,14 @@ log = logger.get_logger(__name__)
 
 
 def create_gold_table() -> None:
-    
+    """
+    Create or replace the Gold.user_metrics table in BigQuery.
+
+    Aggregates user metrics from Gold.obt and orders users by total amount spent.
+
+    Raises:
+        Exception: If an error occurs during the BigQuery operation.
+    """
     log.info('Creating user metrics on BigQuery table Gold.user_metrics.')
     try:
         bq.run_bq_query(f'''
@@ -18,7 +25,10 @@ def create_gold_table() -> None:
                         user_country,
                         COUNT(DISTINCT order_id) AS total_orders,
                         SUM(line_total) AS total_spent,
-                        SAFE_DIVIDE(SUM(line_total), COUNT(DISTINCT order_id)) AS avg_order_value,
+                        SAFE_DIVIDE(
+                            SUM(line_total), 
+                            COUNT(DISTINCT order_id)
+                        ) AS avg_order_value,
                         MIN(order_date_created) AS first_order_date,
                         MAX(order_date_created) AS last_order_date
                     FROM `Gold.obt`
@@ -34,5 +44,4 @@ def create_gold_table() -> None:
         )
     except Exception as e:
         log.error(f'Error while creating user metrics table in BigQuery: {e}')
-
-create_gold_table()
+        raise

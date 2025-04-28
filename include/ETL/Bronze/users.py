@@ -11,11 +11,22 @@ load_dotenv()
 log = logger.get_logger(__name__)
 
 
-def extract_report(report_date: str) -> pd.DataFrame | None:
+def extract_report(report_date: str) -> pd.DataFrame:
+    """
+    Extract the CSV report for a given date from Google Cloud Storage.
 
+    Args:
+        report_date (str): The date of the report to extract in the YYYY-MM-DD format.
+
+    Raises:
+        FileNotFoundError: If no CSV report exists for the given date.
+        Exception: If an unexpected error occurs during extraction.
+
+    Returns:
+        pd.DataFrame: The extracted report as a DataFrame.
+    """
     report_name = f'user_reports/User_report_{report_date}.csv'
     source_bucket = os.getenv('SOURCE_BUCKET_NAME','')
-
     try:
         if not gcs.blob_exists(report_name, source_bucket):
             log.warning(f'No user report dated {report_date} found in {source_bucket}.')
@@ -28,11 +39,20 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
         raise
 
 
-def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:
+def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Upload the report DataFrame to Google Cloud Storage.
 
-    if df is None:
-        return None
-    
+    Args:
+        report_date (str): The date of the report to save in YYYY-MM-DD format.
+        df (pd.DataFrame): The report DataFrame to upload to Google Cloud Storage.
+
+    Raises:
+        Exception: If an unexpected error occurs during upload.
+
+    Returns:
+        pd.DataFrame: The report DataFrame.
+    """      
     report_name = f'user_reports/User_report_{report_date}.csv'
     dest_bucket = os.getenv('DEST_BUCKET_NAME','')
     try:
@@ -49,11 +69,21 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
 
 
 def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
-    
+    """
+    Extract the report for a given date from Google Cloud Storage and upload it to another storage bucket.
+
+    Args:
+        report_date (str): The date of the report to extract and save in YYYY-MM-DD format.
+
+    Raises:
+        Exception: If an error occurs during extraction or upload.
+
+    Returns:
+        pd.DataFrame: The extracted and saved report DataFrame.
+    """
     try:
         df = extract_report(report_date)
-        if df is not None:
-            df = save_df_to_cloud_storage(report_date, df)
+        df = save_df_to_cloud_storage(report_date, df)
         return df
     except Exception as e:
         log.error(f'Error in extract_and_save_report for user report dated {report_date}: {e}')

@@ -4,7 +4,7 @@ from datetime import timedelta
 from airflow.decorators import dag, task, task_group
 from pendulum import datetime
 
-from utils.airflow_task_notification import notify_task_state
+from utils.airflow_notification import notify_task_state
 
 
 default_args = {
@@ -18,7 +18,6 @@ default_args = {
     'email_on_success': True,
     'email_on_failure': True,
     'email': [os.getenv('EMAIL')],
-    'on_success_callback': notify_task_state,
     'on_failure_callback': notify_task_state,
     'on_retry_callback': notify_task_state
 }
@@ -105,8 +104,13 @@ def ecommerce_ETL_pipeline():
 
         load_obt_task() >> load_user_metrics_task() >> load_product_metrics_task() >> load_daily_sales_report_task()
 
+    @task
+    def send_daily_report_task():
+        from ETL.Gold import daily_sales_report
+        to_emails = [os.getenv('EMAIL','')]
+        daily_sales_report.send_daily_sales_report(to_emails)
 
-    extract() >> transform() >> load()
+    extract() >> transform() >> load() >> send_daily_report_task()
 
-    
-dag = ecommerce_ETL_pipeline()
+
+ecommerce_ETL_pipeline()

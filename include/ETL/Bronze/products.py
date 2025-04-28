@@ -13,7 +13,18 @@ load_dotenv()
 log = logger.get_logger(__name__)
 
 def extract_report(report_date: str) -> pd.DataFrame | None:
+    """
+    Extract the CSV report for a given date from Google Cloud Storage.
 
+    Args:
+        report_date (str): The date of the report to extract in the YYYY-MM-DD format.
+
+    Raises:
+        Exception: If an unexpected error occurs during extraction.
+
+    Returns:
+        pd.DataFrame | None: The extracted report as a DataFrame or None if the report does not exist.
+    """
     report_name = f'product_reports/Product_report_{report_date}.csv'
     source_bucket = os.getenv('SOURCE_BUCKET_NAME','')
 
@@ -30,7 +41,19 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
 
 
 def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
+    """
+    Extract product data for a given date from an API.
 
+    Args:
+        report_date (str): The date of the report to extract in the YYYY-MM-DD format.
+
+    Raises:
+        ConnectionError: If an error occurs while connecting to the API or receiving a server error.
+        Exception: If an unexpected error occurs during extraction.
+
+    Returns:
+        pd.DataFrame | None: The extracted report as a DataFrame, or None if no data is available for the date.
+    """
     try:
         api_end_point = os.getenv('API_END_POINT')
         url = f'{api_end_point}/products?date_updated={report_date}'
@@ -57,11 +80,20 @@ def extract_report_from_api(report_date: str) -> pd.DataFrame | None:
         raise
 
 
-def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.DataFrame | None:
+def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Upload the report DataFrame to Google Cloud Storage.
 
-    if df is None:
-        return None
-    
+    Args:
+        report_date (str): The date of the report to save in YYYY-MM-DD format.
+        df (pd.DataFrame): The report DataFrame to upload to Google Cloud Storage.
+
+    Raises:
+        Exception: If an unexpected error occurs during upload.
+
+    Returns:
+        pd.DataFrame: The report DataFrame.
+    """   
     report_name = f'product_reports/Product_report_{report_date}.csv'
     dest_bucket = os.getenv('DEST_BUCKET_NAME','')
     try:
@@ -78,7 +110,18 @@ def save_df_to_cloud_storage(report_date: str, df: pd.DataFrame | None) -> pd.Da
 
 
 def extract_and_save_report(report_date: str) -> pd.DataFrame | None:
-    
+    """
+    Extract the report for a given date from an API and upload it to Google Cloud Storage.
+
+    Args:
+        report_date (str): The date of the report to extract and save in YYYY-MM-DD format.
+
+    Raises:
+        Exception: If an error occurs during extraction or upload.
+
+    Returns:
+        pd.DataFrame: The extracted and saved report DataFrame.
+    """
     try:
         # df = extract_report(report_date)
         df = extract_report_from_api(report_date)

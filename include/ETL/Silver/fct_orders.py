@@ -14,15 +14,27 @@ load_dotenv()
 log = logger.get_logger(__name__)
 
 
-def extract_report(report_date: str) -> pd.DataFrame | None:
+def extract_report(report_date: str) -> pd.DataFrame:
+    """
+    Extract the report for a given date from Bronze layer storage.
 
+    Args:
+        report_date (str): The date of the report to extract in YYYY-MM-DD format.
+
+    Returns:
+        pd.DataFrame: The extracted report as a DataFrame.
+    
+    Raises:
+        FileNotFoundError: If no report exists for the given date.
+        Exception: If an unexpected error occurs during extraction.
+    """
     report_name = f'order_reports/Order_report_{report_date}.csv'
     bucket = os.getenv('DEST_BUCKET_NAME','')
 
     try:
         if not gcs.blob_exists(report_name, bucket):
             log.warning(f'No order report dated {report_date} found in {bucket}.')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'No report found for date {report_date} in bucket {bucket}')
         else:
             return pd.read_csv(f'gcs://{bucket}/{report_name}')
     except Exception as e:
@@ -31,7 +43,18 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
     
 
 def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fill missing item prices firstly using forward/backward fill then by fetching data from Silver.dim_products BigQuery table. 
 
+    Args:
+        df (pd.DataFrame): The report DataFrame to transform missing prices.
+
+    Raises:
+        ValueError: If no prices are found for the item(s) with missing prices. 
+
+    Returns:
+        pd.DataFrame: The transformed report as a DataFrame with missing prices filled in.
+    """
     # Fill missing prices from other rows
     df.loc[:, 'item_price'] = df.groupby('item_sku')['item_price'].transform(lambda x: x.ffill().bfill())
 
@@ -56,16 +79,50 @@ def clean_missing_prices(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_line_total_col(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add a column in the report DataFrame for the total amount of the order line.
 
+    Args:
+        df (pd.DataFrame): The report DataFrame to add the line_total column to.
+
+    Returns:
+        pd.DataFrame: The report DataFrame with a line_total column added.
+    """
     df = df.assign(line_total=df['qty'] * df['item_price'])
     df = df.iloc[:, [0, 1, 2, 3, 4, 5, 7, 6]]
     return df
 
+def add_order_total_col(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add a column in the report DataFrame for the total amount of each order.
+
+    Args:
+        df (pd.DataFrame): The report DataFrame to add the order_total column to.
+
+    Returns:
+        pd.DataFrame: The report DataFrame with an order_total column added.
+    """
+    df = df.assign(
+        order_total=df.groupby('order_id')['line_total'].transform('sum')
+    )
+    df = df.iloc[:, [0, 1, 2, 3, 4, 5, 6, 8, 7]]
+    return df
+
     
-def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
+def validate_and_transform_report(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Validate and transform the data in the report DataFrame.
+
+    Args:
+        df (pd.DataFrame): The report DataFrame to validate and transform.
+
+    Raises:
+        Exception: If an error occurs during validation or transformation.
     
-    if df is None:
-        return
+    Returns:
+        pd.DataFrame: The validated and transformed report as a DataFrame.
+    """
+  
     log.info('Starting validation and transformation on order report.')
     
     try:
@@ -83,6 +140,7 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         df = clean_missing_prices(df)
         df = du.check_ranges(df, **config.get('check_ranges'))
         df = add_line_total_col(df)
+        df = add_order_total_col(df)
         df = du.rename_columns(df, **config.get('rename_columns'))
         log.info('Completed validation and transformation on order report.')
         return df
@@ -91,10 +149,16 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         raise
     
 
-def load_report_to_bq(df: pd.DataFrame | None) -> None:
+def load_report_to_bq(df: pd.DataFrame) -> None:
+    """
+    Upsert the report to BigQuery Silver.fct_orders table.
 
-    if df is None:
-        return None
+    Args:
+        df (pd.DataFrame): The report DataFrame to upsert.
+    
+    Raises:
+        Exception: If an unexpected error occurs during upsert.
+    """
     try:
         log.info(f'Uploading report data to BigQuery table Silver.fct_orders.')
         bq.upsert_df_to_bq(
@@ -106,7 +170,19 @@ def load_report_to_bq(df: pd.DataFrame | None) -> None:
         raise
 
 def create_silver_table(date: str) -> None:
+    """
+    Extract the report for a given date from Bronze layer storage, validate and transform the data and upsert to BigQuery.
+
+    Args:
+        date (str): The date of the report in YYYY-MM-DD format.
     
-    report = extract_report(date)
-    transformed_report = validate_and_transform_report(report)
-    load_report_to_bq(transformed_report)
+    Raises:
+        Exception: If an error occurs during extraction, validation, transformation or upload.
+    """
+    try:
+        report = extract_report(date)
+        transformed_report = validate_and_transform_report(report)
+        load_report_to_bq(transformed_report)
+    except Exception as e:
+        log.error(f'Error in creating silver table for order report dated {date}: {e}')
+        raise

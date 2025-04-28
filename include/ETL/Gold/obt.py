@@ -5,7 +5,15 @@ log = logger.get_logger(__name__)
 
 
 def create_gold_table(date: str) -> None:
-    
+    """
+    Aggregate product, user and order data for a given date and insert it into the BigQuery Gold.obt table.
+
+    Args:
+        date (str): The date of the reports to join in format YYYY-MM-DD.
+
+    Raises:
+        Exception: If an error occurs while running the BigQuery query.
+    """
     log.info('Joining reports on BigQuery table Gold.obt.')
     try:
         bq.run_bq_query(f'''

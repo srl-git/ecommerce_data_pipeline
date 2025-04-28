@@ -15,7 +15,15 @@ log = logger.get_logger(__name__)
 
 
 def extract_report(report_date: str) -> pd.DataFrame | None:
+    """
+    Extract the report for a given date from Bronze layer storage.
 
+    Args:
+        report_date (str): The date of the report to extract in YYYY-MM-DD format.
+
+    Returns:
+        pd.DataFrame | None: The extracted report as a DataFrame or None if the report does not exist.
+    """
     report_name = f'product_reports/Product_report_{report_date}.csv'
     bucket = os.getenv('DEST_BUCKET_NAME','')
 
@@ -30,10 +38,19 @@ def extract_report(report_date: str) -> pd.DataFrame | None:
         raise
 
 
-def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | None:
+def validate_and_transform_report(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Validate and transform the data in the report DataFrame.
+
+    Args:
+        df (pd.DataFrame): The report DataFrame to validate and transform.
+
+    Raises:
+        Exception: If an error occurs during validation or transformation.
     
-    if df is None:
-        return
+    Returns:
+        pd.DataFrame: The validated and transformed report as a DataFrame.
+    """
     log.info('Starting validation and transformation on product report.')
     
     try:
@@ -57,10 +74,16 @@ def validate_and_transform_report(df: pd.DataFrame | None) -> pd.DataFrame | Non
         raise
 
 
-def load_report_to_bq(df: pd.DataFrame | None) -> None:
+def load_report_to_bq(df: pd.DataFrame) -> None:
+    """
+    Upsert the report to BigQuery Silver.dim_products table.
 
-    if df is None:
-        return None
+    Args:
+        df (pd.DataFrame): The report DataFrame to upsert.
+    
+    Raises:
+        Exception: If an unexpected error occurs during upsert.
+    """
     log.info(f'Uploading transformed product report data to BigQuery table Silver.dim_products.')
 
     try:
@@ -74,7 +97,20 @@ def load_report_to_bq(df: pd.DataFrame | None) -> None:
 
 
 def create_silver_table(date: str) -> None:
+    """
+    Extract the report for a given date from Bronze layer storage, validate and transform the data and upsert to BigQuery.
+
+    Args:
+        date (str): The date of the report in YYYY-MM-DD format.
     
-    report = extract_report(date)
-    transformed_report = validate_and_transform_report(report)
-    load_report_to_bq(transformed_report)
+    Raises:
+        Exception: If an error occurs during extraction, validation, transformation or upload.
+    """
+    try:
+        report = extract_report(date)
+        if report is not None:
+            transformed_report = validate_and_transform_report(report)
+            load_report_to_bq(transformed_report)
+    except Exception as e:
+        log.error(f'Error in creating silver table for product report dated {date}: {e}')
+        raise
