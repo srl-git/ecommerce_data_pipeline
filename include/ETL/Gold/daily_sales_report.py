@@ -105,12 +105,14 @@ def email_daily_sales_report(to_emails: list[str], df: pd.DataFrame) -> None:
     msg['Subject'] = f'Daily eCommerce Sales Report: {report_date}'
     msg.attach(MIMEText(full_body, 'html'))
 
-    smtp_server = os.getenv('SMTP_HOST','')
+    smtp_server = os.getenv('SMTP_HOST')
     smtp_port = int(os.getenv('SMTP_PORT', 587))
-    password = os.getenv('SMTP_PASSWORD','')
+    password = os.getenv('SMTP_PASSWORD')
 
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        with smtplib.SMTP(smtp_server) as server:
+            server.connect(host=smtp_server, port=smtp_port)
+            # server.ehlo()
             server.starttls()
             server.login(from_email, password)
             text = msg.as_string()
@@ -139,3 +141,6 @@ def send_daily_sales_report(to_emails: list[str]) -> None:
     except Exception as e:
         log.error(f'Error sending Daily Sales Report: {e}')
         raise
+
+to_emails = [os.getenv('EMAIL','')]
+send_daily_sales_report(to_emails)
