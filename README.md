@@ -7,20 +7,20 @@ A project built to better understand the ETL process in data engineering and ana
 [View the eCommerce Dashboard here.](https://lookerstudio.google.com/reporting/97af44b1-e064-4d94-a599-be2af56907d6/page/pWi5E)
 
 **Sections**
-[Technologies Used](#technologies-used)
-[Architecture](#Architecture)
-[Data Source](#data-source)
-[Data Pipeline](#data-pipeline)
-[Data Visualisation](#data-visualisation)
+[Technologies Used](#technologies-used)  
+[Architecture](#Architecture)  
+[Data Source](#data-source)  
+[Data Pipeline](#data-pipeline)  
+[Data Visualisation](#data-visualisation)  
 
 ## Technologies Used
 
-**Programming**: Python, SQL
-**Cloud**: Google Cloud Storage, BigQuery
-**Data Transformation**: Pandas
-**Orchestration**: Apache Airflow
-**Visualization**: Google Looker Studio
-**Containerization**: Docker
+**Programming**: Python, SQL  
+**Cloud**: Google Cloud Storage, BigQuery  
+**Data Transformation**: Pandas  
+**Orchestration**: Apache Airflow  
+**Visualization**: Google Looker Studio  
+**Containerization**: Docker  
 
 ## Architecture
 ![ETL Architecture](img/Architecture.png?raw=true "ETL Architecture")
