@@ -4,7 +4,7 @@ import asyncio
 import telegram
 
 
-async def send_telegram_msg(text: str):
+async def send_telegram_msg(text: str) -> None:
     """
     Send message to Telegram chat.
 
@@ -21,7 +21,7 @@ async def send_telegram_msg(text: str):
         await bot.send_message(text=text, chat_id=chat_id, parse_mode='Markdown')
 
 
-def notify_task_state(context):
+def notify_task_state(context: dict) -> None:
     """
     Format message for task notifications and send via Telegram.
 

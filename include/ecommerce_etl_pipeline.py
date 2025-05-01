@@ -1,9 +1,15 @@
+import os
 from datetime import datetime
+
+from dotenv import load_dotenv
 
 import utils.logger as logger
 from ETL.Bronze import products, users, orders
 from ETL.Silver import fct_orders, dim_products, dim_users
 from ETL.Gold import obt, user_metrics, product_metrics, daily_sales_report
+
+
+load_dotenv()
 
 
 def extract(date: str) -> None:
@@ -26,6 +32,8 @@ def load(date: str) -> None:
     user_metrics.create_gold_table()
     product_metrics.create_gold_table()
     daily_sales_report.create_gold_table()
+    to_emails = [os.getenv('EMAIL','')]
+    daily_sales_report.send_daily_sales_report(to_emails)
 
 def main() -> None:
     

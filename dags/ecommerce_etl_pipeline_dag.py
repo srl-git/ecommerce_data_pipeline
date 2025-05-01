@@ -57,7 +57,7 @@ def ecommerce_ETL_pipeline():
     @task_group
     def transform():
         """
-        Vaildate/transform raw data and load to BigQuery.
+        Vaildate/transform raw data and load to BigQuery silver tables.
         """
         @task
         def transform_products_task(ds):
@@ -80,7 +80,7 @@ def ecommerce_ETL_pipeline():
     @task_group
     def load():
         """
-        Aggregate/join data and load to BigQuery.
+        Aggregate/join data and load to BigQuery gold tables.
         """
         @task
         def load_obt_task(ds):

@@ -1,19 +1,16 @@
 import logging
-import google.cloud.logging
 
-def setup_cloud_logging():
 
-    client = google.cloud.logging.Client(_use_grpc=False)
-    client.setup_logging()
+def get_logger(name: str) -> logging.Logger:
+    """
+    Initializes and returns a logger with INFO level logging.
 
-def get_logger(name):
+    Args:
+        name (str): Identifier for the logger.
 
+    Returns:
+        Logger: A logger instance.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    logger.propagate = False
-    if not logger.handlers:
-        format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(format)
-        logger.addHandler(console_handler)
     return logger

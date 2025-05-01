@@ -141,6 +141,3 @@ def send_daily_sales_report(to_emails: list[str]) -> None:
     except Exception as e:
         log.error(f'Error sending Daily Sales Report: {e}')
         raise
-
-to_emails = [os.getenv('EMAIL','')]
-send_daily_sales_report(to_emails)
