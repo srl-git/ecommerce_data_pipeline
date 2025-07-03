@@ -42,7 +42,7 @@ def create_gold_table(date: str) -> None:
                 LEFT JOIN
                     `Silver.dim_products` AS dim_products
                     ON fct_orders.item_sku = dim_products.item_sku
-                WHERE fct_orders.order_date_created = '{date}';
+                WHERE DATE(fct_orders.order_date_created) = '{date}';
                 '''
         )
     except Exception as e:
